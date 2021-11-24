@@ -22,8 +22,8 @@ public class LimitController {
      *
      * @return 返回结果
      */
-    @RequestLimit(type = 1, limitCount = 1)
-    @GetMapping("/aop-test")
+    @RequestLimit(limitCount = 2, time = 10)
+    @GetMapping("/aop-fixed-window-test")
     public String aopTest() {
         return "接口返回";
     }

@@ -1,6 +1,9 @@
 package com.cn.lucky.morning.limit.aop;
 
 import com.cn.lucky.morning.limit.annotation.RequestLimit;
+import com.cn.lucky.morning.limit.dto.RequestLimitDTO;
+import com.cn.lucky.morning.limit.factory.RequestLimitFactory;
+import com.cn.lucky.morning.limit.service.RequestLimitService;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.Signature;
@@ -8,6 +11,7 @@ import org.aspectj.lang.annotation.*;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Method;
@@ -25,7 +29,8 @@ import java.lang.reflect.Method;
 public class RequestLimitAop {
     private static final Logger LOGGER = LoggerFactory.getLogger(RequestLimitAop.class);
 
-    private int count = 0;
+    @Autowired
+    private RequestLimitFactory factory;
 
     /**
      * 切入点
@@ -47,15 +52,17 @@ public class RequestLimitAop {
         MethodSignature methodSignature = (MethodSignature) signature;
         Method targetMethod = methodSignature.getMethod();
         RequestLimit limit = targetMethod.getAnnotation(RequestLimit.class);
-        LOGGER.info("doBefore - 限流类型：" + limit.type());
-        LOGGER.info("doBefore - 限流次数：" + limit.limitCount());
 
-        // 检测是否到达限流值
-        if (count >= limit.limitCount()) {
-            LOGGER.info("限流控制，一分钟内只允许访问 " + limit.limitCount() + " 次");
-            throw new RuntimeException("限流控制，一分钟内只允许访问 " + limit.limitCount() + " 次");
+        RequestLimitService service = factory.build(limit.type());
+        if (service == null) {
+            LOGGER.info("【{}】无对应限流操作类型，直接放行", limit.type());
+        } else {
+            RequestLimitDTO dto = new RequestLimitDTO();
+            dto.setLimit(limit);
+            dto.setKey(limit.type().getRedisKey(signature.getName()));
+            service.checkRequestLimit(dto);
         }
-        count++;
+        LOGGER.info("-------------------------------doBefore end------------------------------------");
     }
 
     /**
@@ -81,6 +88,7 @@ public class RequestLimitAop {
      */
     @AfterReturning(pointcut = "aspect()", returning = "obj")
     public void doAfterReturning(JoinPoint joinPoint, Object obj) {
+        LOGGER.info("-------------------------------doAfterReturning begin------------------------------------");
         LOGGER.info("doAfterReturning......");
         LOGGER.info("doAfterReturning - 方法名称：" + joinPoint.getSignature().getName());
         LOGGER.info("doAfterReturning - 返回值：" + obj);

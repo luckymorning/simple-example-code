@@ -16,8 +16,9 @@ public interface RequestLimitService {
      * 检测是否限流
      *
      * @param dto 限流参数
+     * @return 是否被限流 true: 被限流  false: 未限流，放行
      */
-    void checkRequestLimit(RequestLimitDTO dto);
+    boolean checkRequestLimit(RequestLimitDTO dto);
 
     /**
      * 获取当前限流类型

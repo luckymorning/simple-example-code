@@ -52,7 +52,7 @@ public class RequestLimitAop {
         MethodSignature methodSignature = (MethodSignature) signature;
         Method targetMethod = methodSignature.getMethod();
         RequestLimit limit = targetMethod.getAnnotation(RequestLimit.class);
-
+        LOGGER.info("限流配置：{} {} 内允许访问 {} 次", limit.time(), limit.unit(), limit.limitCount());
         RequestLimitService service = factory.build(limit.type());
         if (service == null) {
             LOGGER.info("【{}】无对应限流操作类型，直接放行", limit.type());
@@ -60,7 +60,9 @@ public class RequestLimitAop {
             RequestLimitDTO dto = new RequestLimitDTO();
             dto.setLimit(limit);
             dto.setKey(limit.type().getRedisKey(signature.getName()));
-            service.checkRequestLimit(dto);
+            if (service.checkRequestLimit(dto)) {
+                throw new RuntimeException("【" + limit.type().getValue() + "】限流控制");
+            }
         }
         LOGGER.info("-------------------------------doBefore end------------------------------------");
     }

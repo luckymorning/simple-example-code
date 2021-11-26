@@ -25,7 +25,7 @@ public class LimitController {
      */
     @RequestLimit(type = RequestLimitType.FIXED_WINDOW, limitCount = 2, time = 5)
     @GetMapping("/aop-fixed-window-test")
-    public String aopTest() {
+    public String aopFixedWindowTest() {
         return "固定窗口限流 - 接口返回";
     }
 

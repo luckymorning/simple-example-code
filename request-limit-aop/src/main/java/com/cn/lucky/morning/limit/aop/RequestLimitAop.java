@@ -52,7 +52,7 @@ public class RequestLimitAop {
         MethodSignature methodSignature = (MethodSignature) signature;
         Method targetMethod = methodSignature.getMethod();
         RequestLimit limit = targetMethod.getAnnotation(RequestLimit.class);
-        LOGGER.info("限流配置：{} {} 内允许访问 {} 次", limit.time(), limit.unit(), limit.limitCount());
+        LOGGER.info("限流方式：【{}】", limit.type().getValue());
         RequestLimitService service = factory.build(limit.type());
         if (service == null) {
             LOGGER.info("【{}】无对应限流操作类型，直接放行", limit.type());
@@ -90,11 +90,11 @@ public class RequestLimitAop {
      */
     @AfterReturning(pointcut = "aspect()", returning = "obj")
     public void doAfterReturning(JoinPoint joinPoint, Object obj) {
-        LOGGER.info("-------------------------------doAfterReturning begin------------------------------------");
-        LOGGER.info("doAfterReturning......");
-        LOGGER.info("doAfterReturning - 方法名称：" + joinPoint.getSignature().getName());
-        LOGGER.info("doAfterReturning - 返回值：" + obj);
-        LOGGER.info("-------------------------------doAfterReturning end------------------------------------");
+//        LOGGER.info("-------------------------------doAfterReturning begin------------------------------------");
+//        LOGGER.info("doAfterReturning......");
+//        LOGGER.info("doAfterReturning - 方法名称：" + joinPoint.getSignature().getName());
+//        LOGGER.info("doAfterReturning - 返回值：" + obj);
+//        LOGGER.info("-------------------------------doAfterReturning end------------------------------------");
     }
 
 }

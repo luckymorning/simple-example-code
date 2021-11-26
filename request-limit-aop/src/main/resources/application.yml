@@ -10,3 +10,9 @@ server:
   port: 8001
   servlet:
     context-path: /api/request-limit
+request-limit:
+  token:
+    max-count: 10 #令牌桶最大数量
+    period: 3000 # 生成令牌间隔 单位：毫秒
+    count: 1 # 每次生成令牌数量
+

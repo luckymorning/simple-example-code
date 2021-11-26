@@ -38,6 +38,7 @@ public class FixedWindowRequestLimitServiceImpl implements RequestLimitService {
         if (count == 0) {
             atomicCount.expire(limit.time(), limit.unit());
         }
+        LOGGER.info("限流配置：{} {} 内允许访问 {} 次", limit.time(), limit.unit(), limit.limitCount());
         LOGGER.info("访问时间【{}】", LocalTime.now().toString());
         // 检测是否到达限流值
         if (count >= limit.limitCount()) {

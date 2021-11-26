@@ -39,4 +39,15 @@ public class LimitController {
     public String aopSlideWindowTest() {
         return "滑动窗口限流 - 接口返回";
     }
+
+    /**
+     * 测试AOP拦截 令牌桶 限流
+     *
+     * @return 返回结果
+     */
+    @RequestLimit(type = RequestLimitType.TOKEN)
+    @GetMapping("/aop-token-test")
+    public String aopTokenTest() {
+        return "令牌桶限流 - 接口返回";
+    }
 }

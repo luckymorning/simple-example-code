@@ -1,6 +1,7 @@
 package com.cn.lucky.morning.limit.service.impl;
 
 import com.cn.lucky.morning.limit.annotation.RequestLimit;
+import com.cn.lucky.morning.limit.common.RedisKeyConstant;
 import com.cn.lucky.morning.limit.dto.RequestLimitDTO;
 import com.cn.lucky.morning.limit.enmus.RequestLimitType;
 import com.cn.lucky.morning.limit.service.RequestLimitService;
@@ -30,8 +31,9 @@ public class FixedWindowRequestLimitServiceImpl implements RequestLimitService {
 
     @Override
     public boolean checkRequestLimit(RequestLimitDTO dto) {
+        String key = RedisKeyConstant.RequestLimit.QPS_FIXED_WINDOW + dto.getKey();
         RequestLimit limit = dto.getLimit();
-        RedisAtomicInteger atomicCount = new RedisAtomicInteger(dto.getKey(), factory);
+        RedisAtomicInteger atomicCount = new RedisAtomicInteger(key, factory);
         int count = atomicCount.getAndIncrement();
         if (count == 0) {
             atomicCount.expire(limit.time(), limit.unit());
@@ -39,7 +41,7 @@ public class FixedWindowRequestLimitServiceImpl implements RequestLimitService {
         LOGGER.info("访问时间【{}】", LocalTime.now().toString());
         // 检测是否到达限流值
         if (count >= limit.limitCount()) {
-            String msg = "【" + dto.getKey() + "】限流控制，" + limit.time() + " " + limit.unit().name() + "内只允许访问 " + limit.limitCount() + " 次";
+            String msg = "【" + key + "】限流控制，" + limit.time() + " " + limit.unit().name() + "内只允许访问 " + limit.limitCount() + " 次";
             LOGGER.info(msg);
             return true;
         } else {

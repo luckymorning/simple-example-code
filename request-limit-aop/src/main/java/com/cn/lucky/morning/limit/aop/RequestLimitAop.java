@@ -59,7 +59,7 @@ public class RequestLimitAop {
         } else {
             RequestLimitDTO dto = new RequestLimitDTO();
             dto.setLimit(limit);
-            dto.setKey(limit.type().getRedisKey(signature.getName()));
+            dto.setKey(signature.getName());
             if (service.checkRequestLimit(dto)) {
                 throw new RuntimeException("【" + limit.type().getValue() + "】限流控制");
             }

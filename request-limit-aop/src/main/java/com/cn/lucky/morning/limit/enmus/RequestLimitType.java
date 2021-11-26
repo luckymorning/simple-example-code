@@ -1,7 +1,5 @@
 package com.cn.lucky.morning.limit.enmus;
 
-import com.cn.lucky.morning.limit.common.RedisKeyConstant;
-
 /**
  * RequestLimitType
  * 限流类型
@@ -36,26 +34,5 @@ public enum RequestLimitType {
 
     public String getValue() {
         return value;
-    }
-
-    /**
-     * 获取RedisKey
-     *
-     * @param key 后缀关键字
-     * @return RedisKey
-     */
-    public String getRedisKey(String key) {
-        switch (this) {
-            case FIXED_WINDOW:
-                return RedisKeyConstant.RequestLimit.QPS_FIXED_WINDOW + key;
-            case SLIDE_WINDOW:
-                return RedisKeyConstant.RequestLimit.QPS_SLIDE_WINDOW + key;
-            case TOKEN:
-                return RedisKeyConstant.RequestLimit.QPS_TOKEN + key;
-            case LEAKY_BUCKET:
-                return RedisKeyConstant.RequestLimit.QPS_LEAKY_BUCKET + key;
-            default:
-                return key;
-        }
     }
 }

@@ -48,6 +48,17 @@ public class LimitController {
     @RequestLimit(type = RequestLimitType.TOKEN)
     @GetMapping("/aop-token-test")
     public String aopTokenTest() {
-        return "令牌桶限流 - 接口返回";
+        return "【" + RequestLimitType.TOKEN.getValue() + "】限流 - 接口返回";
+    }
+
+    /**
+     * 测试AOP拦截 漏桶 限流
+     *
+     * @return 返回结果
+     */
+    @RequestLimit(type = RequestLimitType.LEAKY_BUCKET)
+    @GetMapping("/aop-leaky-bucket-test")
+    public String aopLeakyBucketTest() {
+        return "【" + RequestLimitType.LEAKY_BUCKET.getValue() + "】限流 - 接口返回";
     }
 }

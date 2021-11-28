@@ -27,4 +27,17 @@ public class ThreadPoolConfig {
         scheduler.setThreadNamePrefix("生成令牌桶线程");
         return scheduler;
     }
+
+    /**
+     * 漏桶滴水线程池
+     *
+     * @return 线程池实例化对象
+     */
+    @Bean(name = "leakyBucketPopThreadPoolScheduler")
+    public ThreadPoolTaskScheduler leakyBucketPopThreadConfig() {
+        ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
+        scheduler.setPoolSize(1);
+        scheduler.setThreadNamePrefix("漏桶滴水线程");
+        return scheduler;
+    }
 }

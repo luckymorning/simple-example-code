@@ -25,27 +25,24 @@ import java.io.IOException;
 import java.util.*;
 
 /**
- * TokenRequestLimitServiceImpl
- * 令牌桶 限流
+ * LeakyBucketRequestLimitServiceImpl
+ * 漏桶算法 限流
  *
  * @author wangchen
  * @group com.cn.lucky.morning.limit.service.impl
- * @date 2021/11/26 12:15
+ * @date 2021/11/26 17:49
  */
 @Service
-public class TokenRequestLimitServiceImpl implements RequestLimitService {
-    private static final Logger LOGGER = LoggerFactory.getLogger(TokenRequestLimitServiceImpl.class);
+public class LeakyBucketRequestLimitServiceImpl implements RequestLimitService {
+    private static final Logger LOGGER = LoggerFactory.getLogger(LeakyBucketRequestLimitServiceImpl.class);
 
-    @javax.annotation.Resource(name = "tokenPushThreadPoolScheduler")
+    @javax.annotation.Resource(name = "leakyBucketPopThreadPoolScheduler")
     private ThreadPoolTaskScheduler scheduler;
 
-    @Value("${request-limit.token.max-count:100}")
-    private int maxCount;
-
-    @Value("${request-limit.token.period:10000}")
+    @Value("${request-limit.leaky-bucket.period:10000}")
     private long period;
 
-    @Value("${request-limit.token.count:10}")
+    @Value("${request-limit.leaky-bucket.count:10}")
     private int count;
 
     @Autowired
@@ -56,34 +53,28 @@ public class TokenRequestLimitServiceImpl implements RequestLimitService {
 
     @Override
     public boolean checkRequestLimit(RequestLimitDTO dto) {
-        Object pop = redisTemplate.opsForList().rightPop(RedisKeyConstant.RequestLimit.QPS_TOKEN);
-        LOGGER.info("限流配置：每 {} 毫秒 生成 {} 个令牌，最大令牌数：{}", period, count, maxCount);
-        return pop == null;
+        Long size = redisTemplate.opsForList().size(RedisKeyConstant.RequestLimit.QPS_LEAKY_BUCKET);
+        return size != null && size >= count;
+    }
+
+    @PostConstruct
+    public void popToken() {
+        List<RequestLimitDTO> list = this.getTokenLimitList(resourcePatternResolver, RequestLimitType.LEAKY_BUCKET);
+        if (list.isEmpty()) {
+            LOGGER.info("未扫描到使用 漏桶限流 注解的方法，结束生成令牌线程");
+            return;
+        }
+        redisTemplate.delete(RedisKeyConstant.RequestLimit.QPS_LEAKY_BUCKET);
+        scheduler.scheduleAtFixedRate(() -> {
+            for (int index = 0; index < count; index++) {
+                redisTemplate.opsForList().trim(RedisKeyConstant.RequestLimit.QPS_LEAKY_BUCKET, count, -1);
+                LOGGER.info("漏出 {} 个水滴", count);
+            }
+        }, period);
     }
 
     @Override
     public RequestLimitType getType() {
-        return RequestLimitType.TOKEN;
-    }
-
-    @PostConstruct
-    public void pushToken() {
-        List<RequestLimitDTO> list = this.getTokenLimitList(resourcePatternResolver, RequestLimitType.TOKEN);
-        if (list.isEmpty()) {
-            LOGGER.info("未扫描到使用 令牌限流 注解的方法，结束生成令牌线程");
-            return;
-        }
-        redisTemplate.delete(RedisKeyConstant.RequestLimit.QPS_TOKEN);
-        scheduler.scheduleAtFixedRate(() -> {
-            for (int index = 0; index < count; index++) {
-                Long size = redisTemplate.opsForList().size(RedisKeyConstant.RequestLimit.QPS_TOKEN);
-                if (size != null && size >= maxCount) {
-                    LOGGER.info("令牌数量已达最大值【{}】，丢弃新生成令牌", size);
-                    return;
-                }
-                redisTemplate.opsForList().leftPush(RedisKeyConstant.RequestLimit.QPS_TOKEN, UUID.randomUUID().toString());
-                LOGGER.info("生成令牌丢入令牌桶");
-            }
-        }, period);
+        return RequestLimitType.LEAKY_BUCKET;
     }
 }

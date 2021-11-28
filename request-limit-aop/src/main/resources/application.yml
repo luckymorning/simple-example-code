@@ -10,9 +10,12 @@ server:
   port: 8001
   servlet:
     context-path: /api/request-limit
-request-limit:
-  token:
+request-limit: #限流配置
+  token: # 令牌桶
     max-count: 10 #令牌桶最大数量
     period: 3000 # 生成令牌间隔 单位：毫秒
     count: 1 # 每次生成令牌数量
+  leaky-bucket: # 漏桶
+    period: 1000 # 漏出水滴间隔 单位：毫秒
+    count: 1 # 每次漏出水滴数量
 

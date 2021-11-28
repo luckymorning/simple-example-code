@@ -36,6 +36,8 @@ public class SlideWindowRequestLimitServiceImpl implements RequestLimitService {
         long current = System.currentTimeMillis();
         long duringTime = limit.unit().toMillis(limit.time());
         Long count = redisTemplate.opsForZSet().count(key, current - duringTime, current);
+        // 清除有效期外的数据
+        redisTemplate.opsForZSet().removeRangeByScore(key, 0, current - duringTime - 1);
 
         LOGGER.info("限流配置：{} {} 内允许访问 {} 次", limit.time(), limit.unit(), limit.limitCount());
         LOGGER.info("访问时间【{}】", LocalTime.now().toString());

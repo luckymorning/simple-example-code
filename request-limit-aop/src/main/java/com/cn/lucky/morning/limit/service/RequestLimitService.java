@@ -46,13 +46,14 @@ public interface RequestLimitService {
      *
      * @param resourcePatternResolver 资源查询
      * @param requestLimitType        注解类型
+     * @param scanPackage             扫描包路径
      * @return 带注解方法列表
      */
-    default List<RequestLimitDTO> getTokenLimitList(ResourcePatternResolver resourcePatternResolver, RequestLimitType requestLimitType) {
+    default List<RequestLimitDTO> getTokenLimitList(ResourcePatternResolver resourcePatternResolver, RequestLimitType requestLimitType, String scanPackage) {
         try {
             List<RequestLimitDTO> list = new ArrayList<>();
 
-            Resource[] resources = resourcePatternResolver.getResources(ResourcePatternResolver.CLASSPATH_ALL_URL_PREFIX + "com/cn/lucky/morning/limit/controller/**/*.class");
+            Resource[] resources = resourcePatternResolver.getResources(ResourcePatternResolver.CLASSPATH_ALL_URL_PREFIX + scanPackage + "/**/*.class");
 
             MetadataReaderFactory metaReader = new CachingMetadataReaderFactory();
             for (Resource resource : resources) {

@@ -24,9 +24,7 @@ public class RequestLimitFactory implements ApplicationContextAware {
 
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
-        applicationContext.getBeansOfType(RequestLimitService.class).values().forEach(service -> {
-            MAP.put(service.getType(), service);
-        });
+        applicationContext.getBeansOfType(RequestLimitService.class).values().forEach(service -> MAP.put(service.getType(), service));
     }
 
     /**

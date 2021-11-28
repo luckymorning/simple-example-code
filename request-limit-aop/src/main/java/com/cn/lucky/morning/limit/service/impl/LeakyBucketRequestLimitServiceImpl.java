@@ -1,6 +1,5 @@
 package com.cn.lucky.morning.limit.service.impl;
 
-import com.cn.lucky.morning.limit.annotation.RequestLimit;
 import com.cn.lucky.morning.limit.common.RedisKeyConstant;
 import com.cn.lucky.morning.limit.dto.RequestLimitDTO;
 import com.cn.lucky.morning.limit.enmus.RequestLimitType;
@@ -9,19 +8,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.ResourcePatternResolver;
-import org.springframework.core.type.AnnotationMetadata;
-import org.springframework.core.type.MethodMetadata;
-import org.springframework.core.type.classreading.CachingMetadataReaderFactory;
-import org.springframework.core.type.classreading.MetadataReader;
-import org.springframework.core.type.classreading.MetadataReaderFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.io.IOException;
 import java.util.*;
 
 /**
@@ -45,6 +37,9 @@ public class LeakyBucketRequestLimitServiceImpl implements RequestLimitService {
     @Value("${request-limit.leaky-bucket.count:10}")
     private int count;
 
+    @Value("${request-limit.scan-package:}")
+    private String scanPackage;
+
     @Autowired
     private ResourcePatternResolver resourcePatternResolver;
 
@@ -59,16 +54,16 @@ public class LeakyBucketRequestLimitServiceImpl implements RequestLimitService {
 
     @PostConstruct
     public void popToken() {
-        List<RequestLimitDTO> list = this.getTokenLimitList(resourcePatternResolver, RequestLimitType.LEAKY_BUCKET);
+        List<RequestLimitDTO> list = this.getTokenLimitList(resourcePatternResolver, RequestLimitType.LEAKY_BUCKET, scanPackage);
         if (list.isEmpty()) {
-            LOGGER.info("未扫描到使用 漏桶限流 注解的方法，结束生成令牌线程");
+            LOGGER.debug("未扫描到使用 漏桶限流 注解的方法，结束生成令牌线程");
             return;
         }
         redisTemplate.delete(RedisKeyConstant.RequestLimit.QPS_LEAKY_BUCKET);
         scheduler.scheduleAtFixedRate(() -> {
             for (int index = 0; index < count; index++) {
                 redisTemplate.opsForList().trim(RedisKeyConstant.RequestLimit.QPS_LEAKY_BUCKET, count, -1);
-                LOGGER.info("漏出 {} 个水滴", count);
+                LOGGER.debug("漏出 {} 个水滴", count);
             }
         }, period);
     }

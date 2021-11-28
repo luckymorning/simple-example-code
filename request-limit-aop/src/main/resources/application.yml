@@ -11,6 +11,7 @@ server:
   servlet:
     context-path: /api/request-limit
 request-limit: #限流配置
+  scan-package: com/cn/lucky/morning/limit/controller/ #扫描注解包路径
   token: # 令牌桶
     max-count: 10 #令牌桶最大数量
     period: 3000 # 生成令牌间隔 单位：毫秒

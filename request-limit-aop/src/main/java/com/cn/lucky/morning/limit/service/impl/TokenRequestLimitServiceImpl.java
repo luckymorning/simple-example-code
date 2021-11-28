@@ -1,6 +1,5 @@
 package com.cn.lucky.morning.limit.service.impl;
 
-import com.cn.lucky.morning.limit.annotation.RequestLimit;
 import com.cn.lucky.morning.limit.common.RedisKeyConstant;
 import com.cn.lucky.morning.limit.dto.RequestLimitDTO;
 import com.cn.lucky.morning.limit.enmus.RequestLimitType;
@@ -9,19 +8,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.ResourcePatternResolver;
-import org.springframework.core.type.AnnotationMetadata;
-import org.springframework.core.type.MethodMetadata;
-import org.springframework.core.type.classreading.CachingMetadataReaderFactory;
-import org.springframework.core.type.classreading.MetadataReader;
-import org.springframework.core.type.classreading.MetadataReaderFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.io.IOException;
 import java.util.*;
 
 /**
@@ -48,6 +40,9 @@ public class TokenRequestLimitServiceImpl implements RequestLimitService {
     @Value("${request-limit.token.count:10}")
     private int count;
 
+    @Value("${request-limit.scan-package:}")
+    private String scanPackage;
+
     @Autowired
     private ResourcePatternResolver resourcePatternResolver;
 
@@ -57,7 +52,7 @@ public class TokenRequestLimitServiceImpl implements RequestLimitService {
     @Override
     public boolean checkRequestLimit(RequestLimitDTO dto) {
         Object pop = redisTemplate.opsForList().rightPop(RedisKeyConstant.RequestLimit.QPS_TOKEN);
-        LOGGER.info("限流配置：每 {} 毫秒 生成 {} 个令牌，最大令牌数：{}", period, count, maxCount);
+        LOGGER.debug("限流配置：每 {} 毫秒 生成 {} 个令牌，最大令牌数：{}", period, count, maxCount);
         return pop == null;
     }
 
@@ -68,9 +63,9 @@ public class TokenRequestLimitServiceImpl implements RequestLimitService {
 
     @PostConstruct
     public void pushToken() {
-        List<RequestLimitDTO> list = this.getTokenLimitList(resourcePatternResolver, RequestLimitType.TOKEN);
+        List<RequestLimitDTO> list = this.getTokenLimitList(resourcePatternResolver, RequestLimitType.TOKEN, scanPackage);
         if (list.isEmpty()) {
-            LOGGER.info("未扫描到使用 令牌限流 注解的方法，结束生成令牌线程");
+            LOGGER.debug("未扫描到使用 令牌限流 注解的方法，结束生成令牌线程");
             return;
         }
         redisTemplate.delete(RedisKeyConstant.RequestLimit.QPS_TOKEN);
@@ -78,11 +73,11 @@ public class TokenRequestLimitServiceImpl implements RequestLimitService {
             for (int index = 0; index < count; index++) {
                 Long size = redisTemplate.opsForList().size(RedisKeyConstant.RequestLimit.QPS_TOKEN);
                 if (size != null && size >= maxCount) {
-                    LOGGER.info("令牌数量已达最大值【{}】，丢弃新生成令牌", size);
+                    LOGGER.debug("令牌数量已达最大值【{}】，丢弃新生成令牌", size);
                     return;
                 }
                 redisTemplate.opsForList().leftPush(RedisKeyConstant.RequestLimit.QPS_TOKEN, UUID.randomUUID().toString());
-                LOGGER.info("生成令牌丢入令牌桶");
+                LOGGER.debug("生成令牌丢入令牌桶");
             }
         }, period);
     }

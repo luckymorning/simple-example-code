@@ -37,7 +37,7 @@ public class RequestLimitAop {
      */
     @Pointcut(value = "@annotation(com.cn.lucky.morning.limit.annotation.RequestLimit)")
     public void aspect() {
-
+        // 切入点方法
     }
 
     /**

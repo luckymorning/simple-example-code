@@ -1,6 +1,5 @@
 package com.cn.lucky.morning.limit.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -16,9 +15,6 @@ import org.springframework.data.redis.core.RedisTemplate;
  */
 @Configuration
 public class RedisConfig {
-    @Autowired
-    private RedisConnectionFactory factory;
-
 
     /**
      * 初始化RedisTemplate
@@ -26,7 +22,7 @@ public class RedisConfig {
      * @return redisTemplate
      */
     @Bean
-    public RedisTemplate<String, Object> redisTemplate() {
+    public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory factory) {
         RedisTemplate<String, Object> redisTemplate = new RedisTemplate<>();
         redisTemplate.setConnectionFactory(factory);
         return redisTemplate;

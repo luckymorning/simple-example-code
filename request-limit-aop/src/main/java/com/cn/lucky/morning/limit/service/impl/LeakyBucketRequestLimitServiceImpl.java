@@ -53,14 +53,14 @@ public class LeakyBucketRequestLimitServiceImpl implements RequestLimitService {
     public void popToken() {
         List<RequestLimitDTO> list = this.getTokenLimitList(resourcePatternResolver, RequestLimitType.LEAKY_BUCKET, scanPackage);
         if (list.isEmpty()) {
-            LOGGER.debug("未扫描到使用 漏桶限流 注解的方法，结束生成令牌线程");
+            LOGGER.info("未扫描到使用 漏桶限流 注解的方法，结束生成令牌线程");
             return;
         }
 
         list.forEach(limit -> scheduler.scheduleAtFixedRate(() -> {
             String key = RedisKeyConstant.RequestLimit.QPS_LEAKY_BUCKET + limit.getKey();
             redisTemplate.opsForList().trim(key, limit.getLimit().limitPeriodCount(), -1);
-            LOGGER.debug("【{}】漏出 {} 个水滴", key, limit.getLimit().limitPeriodCount());
+            LOGGER.info("【{}】漏出 {} 个水滴", key, limit.getLimit().limitPeriodCount());
         }, limit.getLimit().period()));
     }
 

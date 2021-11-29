@@ -47,7 +47,7 @@ public class TokenRequestLimitServiceImpl implements RequestLimitService {
     public boolean checkRequestLimit(RequestLimitDTO dto) {
         Object pop = redisTemplate.opsForList().rightPop(RedisKeyConstant.RequestLimit.QPS_TOKEN + dto.getKey());
         RequestLimit limit = dto.getLimit();
-        LOGGER.debug("限流配置：每 {} 毫秒 生成 {} 个令牌，最大令牌数：{}", limit.period(), limit.limitPeriodCount(), limit.limitCount());
+        LOGGER.info("限流配置：每 {} 毫秒 生成 {} 个令牌，最大令牌数：{}", limit.period(), limit.limitPeriodCount(), limit.limitCount());
         return pop == null;
     }
 
@@ -63,7 +63,7 @@ public class TokenRequestLimitServiceImpl implements RequestLimitService {
     public void pushToken() {
         List<RequestLimitDTO> list = this.getTokenLimitList(resourcePatternResolver, RequestLimitType.TOKEN, scanPackage);
         if (list.isEmpty()) {
-            LOGGER.debug("未扫描到使用 令牌限流 注解的方法，结束生成令牌线程");
+            LOGGER.info("未扫描到使用 令牌限流 注解的方法，结束生成令牌线程");
             return;
         }
 
@@ -74,7 +74,7 @@ public class TokenRequestLimitServiceImpl implements RequestLimitService {
                 size = 0L;
             }
             if (size.intValue() >= limit.getLimit().limitCount()) {
-                LOGGER.debug("【{}】令牌数量已达最大值【{}】，丢弃新生成令牌", key, size);
+                LOGGER.info("【{}】令牌数量已达最大值【{}】，丢弃新生成令牌", key, size);
                 return;
             }
             int addSize = size == 0 ? limit.getLimit().limitPeriodCount() : Math.min(limit.getLimit().limitPeriodCount(), Math.abs(size.intValue() - limit.getLimit().limitPeriodCount()));
@@ -83,7 +83,7 @@ public class TokenRequestLimitServiceImpl implements RequestLimitService {
                 addList.add(UUID.randomUUID().toString());
             }
             redisTemplate.opsForList().leftPushAll(key, addList);
-            LOGGER.debug("【{}】生成令牌丢入令牌桶", key);
+            LOGGER.info("【{}】生成令牌丢入令牌桶", key);
         }, limit.getLimit().period()));
     }
 }

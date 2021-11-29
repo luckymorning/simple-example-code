@@ -40,4 +40,14 @@ public @interface RequestLimit {
      * 限流时间段 时间单位
      */
     TimeUnit unit() default TimeUnit.SECONDS;
+
+    /**
+     * 漏出或者生成令牌时间间隔，单位 毫秒  (当type为TOKEN、LEAKY_BUCKET时生效)
+     */
+    long period() default 1000;
+
+    /**
+     * 每次生成令牌数或者漏出水滴数  (当type为TOKEN、LEAKY_BUCKET时生效)
+     */
+    int limitPeriodCount() default 10;
 }

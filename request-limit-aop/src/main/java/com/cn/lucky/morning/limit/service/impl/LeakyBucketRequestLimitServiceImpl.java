@@ -14,7 +14,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-import java.util.*;
+import java.util.List;
 
 /**
  * LeakyBucketRequestLimitServiceImpl
@@ -31,12 +31,6 @@ public class LeakyBucketRequestLimitServiceImpl implements RequestLimitService {
     @javax.annotation.Resource(name = "leakyBucketPopThreadPoolScheduler")
     private ThreadPoolTaskScheduler scheduler;
 
-    @Value("${request-limit.leaky-bucket.period:10000}")
-    private long period;
-
-    @Value("${request-limit.leaky-bucket.count:10}")
-    private int count;
-
     @Value("${request-limit.scan-package:}")
     private String scanPackage;
 
@@ -48,10 +42,13 @@ public class LeakyBucketRequestLimitServiceImpl implements RequestLimitService {
 
     @Override
     public boolean checkRequestLimit(RequestLimitDTO dto) {
-        Long size = redisTemplate.opsForList().size(RedisKeyConstant.RequestLimit.QPS_LEAKY_BUCKET);
-        return size != null && size >= count;
+        Long size = redisTemplate.opsForList().size(RedisKeyConstant.RequestLimit.QPS_LEAKY_BUCKET + dto.getKey());
+        return size != null && size >= dto.getLimit().limitCount();
     }
 
+    /**
+     * 定数流出令牌
+     */
     @PostConstruct
     public void popToken() {
         List<RequestLimitDTO> list = this.getTokenLimitList(resourcePatternResolver, RequestLimitType.LEAKY_BUCKET, scanPackage);
@@ -59,13 +56,12 @@ public class LeakyBucketRequestLimitServiceImpl implements RequestLimitService {
             LOGGER.debug("未扫描到使用 漏桶限流 注解的方法，结束生成令牌线程");
             return;
         }
-        redisTemplate.delete(RedisKeyConstant.RequestLimit.QPS_LEAKY_BUCKET);
-        scheduler.scheduleAtFixedRate(() -> {
-            for (int index = 0; index < count; index++) {
-                redisTemplate.opsForList().trim(RedisKeyConstant.RequestLimit.QPS_LEAKY_BUCKET, count, -1);
-                LOGGER.debug("漏出 {} 个水滴", count);
-            }
-        }, period);
+
+        list.forEach(limit -> scheduler.scheduleAtFixedRate(() -> {
+            String key = RedisKeyConstant.RequestLimit.QPS_LEAKY_BUCKET + limit.getKey();
+            redisTemplate.opsForList().trim(key, limit.getLimit().limitPeriodCount(), -1);
+            LOGGER.debug("【{}】漏出 {} 个水滴", key, limit.getLimit().limitPeriodCount());
+        }, limit.getLimit().period()));
     }
 
     @Override

@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 public @interface RequestLimit {
 
     /**
-     * 限流类型 1：固定窗口 2：滑动窗口  3：令牌算法 4：漏桶算法
+     * 限流类型 ，具体见枚举类 com.cn.lucky.morning.limit.enmus.RequestLimitType
      */
     RequestLimitType type() default RequestLimitType.FIXED_WINDOW;
 

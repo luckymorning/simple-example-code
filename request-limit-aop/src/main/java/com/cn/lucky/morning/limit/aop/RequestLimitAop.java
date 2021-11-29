@@ -47,24 +47,27 @@ public class RequestLimitAop {
      */
     @Before("aspect()")
     public void doBefore(JoinPoint joinPoint) {
-        LOGGER.info("-------------------------------doBefore begin------------------------------------");
-        Signature signature = joinPoint.getSignature();
-        MethodSignature methodSignature = (MethodSignature) signature;
-        Method targetMethod = methodSignature.getMethod();
-        RequestLimit limit = targetMethod.getAnnotation(RequestLimit.class);
-        LOGGER.info("限流方式：【{}】", limit.type().getValue());
-        RequestLimitService service = factory.build(limit.type());
-        if (service == null) {
-            LOGGER.info("【{}】无对应限流操作类型，直接放行", limit.type());
-        } else {
-            RequestLimitDTO dto = new RequestLimitDTO();
-            dto.setLimit(limit);
-            dto.setKey(signature.getName());
-            if (service.checkRequestLimit(dto)) {
-                throw new RuntimeException("【" + limit.type().getValue() + "】限流控制");
+        try {
+            LOGGER.info("-------------------------------doBefore begin------------------------------------");
+            Signature signature = joinPoint.getSignature();
+            MethodSignature methodSignature = (MethodSignature) signature;
+            Method targetMethod = methodSignature.getMethod();
+            RequestLimit limit = targetMethod.getAnnotation(RequestLimit.class);
+            LOGGER.info("限流方式：【{}】", limit.type().getValue());
+            RequestLimitService service = factory.build(limit.type());
+            if (service == null) {
+                LOGGER.info("【{}】无对应限流操作类型，直接放行", limit.type());
+            } else {
+                RequestLimitDTO dto = new RequestLimitDTO();
+                dto.setLimit(limit);
+                dto.setKey(signature.getName());
+                if (service.checkRequestLimit(dto)) {
+                    throw new RuntimeException("【" + limit.type().getValue() + "】限流控制");
+                }
             }
+        } finally {
+            LOGGER.info("-------------------------------doBefore end------------------------------------");
         }
-        LOGGER.info("-------------------------------doBefore end------------------------------------");
     }
 
     /**

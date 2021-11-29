@@ -2,7 +2,7 @@ package com.cn.lucky.morning.limit.service;
 
 import com.cn.lucky.morning.limit.annotation.RequestLimit;
 import com.cn.lucky.morning.limit.dto.RequestLimitDTO;
-import com.cn.lucky.morning.limit.enmus.RequestLimitType;
+import com.cn.lucky.morning.limit.enums.RequestLimitType;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.ResourcePatternResolver;
 import org.springframework.core.type.AnnotationMetadata;

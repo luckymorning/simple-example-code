@@ -1,4 +1,4 @@
-package com.cn.lucky.morning.limit.enmus;
+package com.cn.lucky.morning.limit.enums;
 
 /**
  * RequestLimitType

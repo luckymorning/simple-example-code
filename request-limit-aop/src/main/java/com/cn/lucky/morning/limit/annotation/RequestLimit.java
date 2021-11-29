@@ -1,6 +1,6 @@
 package com.cn.lucky.morning.limit.annotation;
 
-import com.cn.lucky.morning.limit.enmus.RequestLimitType;
+import com.cn.lucky.morning.limit.enums.RequestLimitType;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 
@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 public @interface RequestLimit {
 
     /**
-     * 限流类型 ，具体见枚举类 com.cn.lucky.morning.limit.enmus.RequestLimitType
+     * 限流类型 ，具体见枚举类 com.cn.lucky.morning.limit.enums.RequestLimitType
      */
     RequestLimitType type() default RequestLimitType.FIXED_WINDOW;
 

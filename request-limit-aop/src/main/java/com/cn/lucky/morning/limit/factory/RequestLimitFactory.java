@@ -1,6 +1,6 @@
 package com.cn.lucky.morning.limit.factory;
 
-import com.cn.lucky.morning.limit.enmus.RequestLimitType;
+import com.cn.lucky.morning.limit.enums.RequestLimitType;
 import com.cn.lucky.morning.limit.service.RequestLimitService;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;

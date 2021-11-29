@@ -1,7 +1,7 @@
 package com.cn.lucky.morning.limit.controller;
 
 import com.cn.lucky.morning.limit.annotation.RequestLimit;
-import com.cn.lucky.morning.limit.enmus.RequestLimitType;
+import com.cn.lucky.morning.limit.enums.RequestLimitType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;

@@ -3,7 +3,7 @@ package com.cn.lucky.morning.limit.service.impl;
 import com.cn.lucky.morning.limit.annotation.RequestLimit;
 import com.cn.lucky.morning.limit.common.RedisKeyConstant;
 import com.cn.lucky.morning.limit.dto.RequestLimitDTO;
-import com.cn.lucky.morning.limit.enmus.RequestLimitType;
+import com.cn.lucky.morning.limit.enums.RequestLimitType;
 import com.cn.lucky.morning.limit.service.RequestLimitService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

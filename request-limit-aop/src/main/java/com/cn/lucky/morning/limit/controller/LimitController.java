@@ -19,6 +19,17 @@ import org.springframework.web.bind.annotation.RestController;
 public class LimitController {
 
     /**
+     * 测试AOP拦截
+     *
+     * @return 返回结果
+     */
+    @RequestLimit
+    @GetMapping("/aop-test")
+    public String aopTest() {
+        return "测试AOP拦截效果";
+    }
+
+    /**
      * 测试AOP拦截 固定窗口限流
      *
      * @return 返回结果

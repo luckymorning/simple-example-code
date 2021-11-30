@@ -47,7 +47,7 @@ public class SlideWindowRequestLimitServiceImpl implements RequestLimitService {
             LOGGER.info(msg);
             return true;
         } else {
-            redisTemplate.opsForZSet().add(key, UUID.randomUUID().toString(), System.currentTimeMillis());
+            redisTemplate.opsForZSet().add(key, UUID.randomUUID().toString(), current);
             LOGGER.info("未达到限流值，放行 {}/{}", count, limit.limitCount());
             return false;
         }

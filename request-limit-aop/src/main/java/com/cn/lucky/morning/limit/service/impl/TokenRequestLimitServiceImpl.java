@@ -48,7 +48,13 @@ public class TokenRequestLimitServiceImpl implements RequestLimitService {
         Object pop = redisTemplate.opsForList().rightPop(RedisKeyConstant.RequestLimit.QPS_TOKEN + dto.getKey());
         RequestLimit limit = dto.getLimit();
         LOGGER.info("限流配置：每 {} 毫秒 生成 {} 个令牌，最大令牌数：{}", limit.period(), limit.limitPeriodCount(), limit.limitCount());
-        return pop == null;
+        if (pop == null) {
+            LOGGER.info("【{}】限流控制，令牌桶中不存在令牌，请求被拦截", dto.getKey());
+            return true;
+        } else {
+            LOGGER.info("【{}】令牌桶存在令牌，未达到限流值，放行", dto.getKey());
+            return false;
+        }
     }
 
     @Override
@@ -61,29 +67,32 @@ public class TokenRequestLimitServiceImpl implements RequestLimitService {
      */
     @PostConstruct
     public void pushToken() {
+        // 扫描出所有使用了自定义注解并且限流类型为令牌算法的方法信息
         List<RequestLimitDTO> list = this.getTokenLimitList(resourcePatternResolver, RequestLimitType.TOKEN, scanPackage);
         if (list.isEmpty()) {
             LOGGER.info("未扫描到使用 令牌限流 注解的方法，结束生成令牌线程");
             return;
         }
 
+        // 每个接口方法更具注解配置信息提交定时任务，生成令牌进令牌桶
         list.forEach(limit -> scheduler.scheduleAtFixedRate(() -> {
+
             String key = RedisKeyConstant.RequestLimit.QPS_TOKEN + limit.getKey();
-            Long size = redisTemplate.opsForList().size(key);
-            if (size == null) {
-                size = 0L;
-            }
-            if (size.intValue() >= limit.getLimit().limitCount()) {
+            Long tokenSize = redisTemplate.opsForList().size(key);
+
+            int size = tokenSize == null ? 0 : tokenSize.intValue();
+            if (size >= limit.getLimit().limitCount()) {
                 LOGGER.info("【{}】令牌数量已达最大值【{}】，丢弃新生成令牌", key, size);
                 return;
             }
-            int addSize = size == 0 ? limit.getLimit().limitPeriodCount() : Math.min(limit.getLimit().limitPeriodCount(), Math.abs(size.intValue() - limit.getLimit().limitPeriodCount()));
+            // 判断添加令牌数量
+            int addSize = Math.min(limit.getLimit().limitPeriodCount(), limit.getLimit().limitCount() - size);
             List<String> addList = new ArrayList<>(addSize);
             for (int index = 0; index < addSize; index++) {
                 addList.add(UUID.randomUUID().toString());
             }
             redisTemplate.opsForList().leftPushAll(key, addList);
-            LOGGER.info("【{}】生成令牌丢入令牌桶", key);
+            LOGGER.info("【{}】生成令牌丢入令牌桶，当前令牌数：{}，令牌桶容量：{}", key, size + addSize, limit.getLimit().limitCount());
         }, limit.getLimit().period()));
     }
 }

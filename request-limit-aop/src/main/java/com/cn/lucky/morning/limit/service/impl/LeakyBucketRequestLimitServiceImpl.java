@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * LeakyBucketRequestLimitServiceImpl
@@ -42,8 +43,17 @@ public class LeakyBucketRequestLimitServiceImpl implements RequestLimitService {
 
     @Override
     public boolean checkRequestLimit(RequestLimitDTO dto) {
-        Long size = redisTemplate.opsForList().size(RedisKeyConstant.RequestLimit.QPS_LEAKY_BUCKET + dto.getKey());
-        return size != null && size >= dto.getLimit().limitCount();
+        String key = RedisKeyConstant.RequestLimit.QPS_LEAKY_BUCKET + dto.getKey();
+        Long size = redisTemplate.opsForList().size(key);
+
+        if (size != null && size >= dto.getLimit().limitCount()) {
+            LOGGER.info("【{}】限流控制，漏桶中容量已满，请求被拦截", dto.getKey());
+            return true;
+        } else {
+            LOGGER.info("【{}】漏桶中容量未满，放行，当前水滴容量：{}，漏桶容量：{}", dto.getKey(), size, dto.getLimit().limitCount());
+            redisTemplate.opsForList().leftPush(key, UUID.randomUUID().toString());
+            return false;
+        }
     }
 
     /**
